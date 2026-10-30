@@ -1,20 +1,23 @@
 <?php
 session_start();
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/helpers.php'; // CSRF, e(), url()... (painel e loja)
 Database::getConnection();
 
 
 // Roteamento simples via GET
+// (padrão continua sendo o login do vendedor; a loja abre em index.php?controller=loja&action=index)
 $controller = $_GET['controller'] ?? 'auth';
 $action = $_GET['action'] ?? 'form';
+
+// Só letras e números (evita carregar arquivo de caminho arbitrário)
+if (!preg_match('/^[a-zA-Z][a-zA-Z0-9]*$/', (string) $controller) || !preg_match('/^[a-zA-Z][a-zA-Z0-9]*$/', (string) $action)) {
+    die("Requisição inválida.");
+}
 
 
 // Carregar controller
 switch ($controller) {
-    case 'dashboard':
-    require_once __DIR__ . '/controllers/DashboardController.php';
-    $c = new DashboardController();
-    break;
     case 'auth':
         require_once __DIR__ . '/controllers/AuthController.php';
         $c = new AuthController();
@@ -29,7 +32,7 @@ switch ($controller) {
 
 
     case 'entrada':
-        require_once __DIR__ . '/controllers/Entrada_Controller.php';
+        require_once __DIR__ . '/controllers/EntradaController.php';
         $c = new EntradaController();
         break;
 
@@ -49,32 +52,64 @@ switch ($controller) {
         require_once __DIR__ . '/controllers/UsuarioController.php';
         $c = new UsuarioController();
         break;
-     case 'categoria':
-         require_once __DIR__ . '/controllers/CategoriaController.php';
-         $c = new CategoriaController();
+
+    case 'categoria':
+        require_once __DIR__ . '/controllers/CategoriaController.php';
+        $c = new CategoriaController();
         break;
 
-      case 'sobre':
-    require_once __DIR__ . '/controllers/SobreController.php';
-    $c = new SobreController();
-    break;
-    case 'livros':
-    require_once __DIR__ . '/controllers/LivrosController.php';
-    $c = new LivrosController();
-    break;
+    case 'fornecedor':
+        require_once __DIR__ . '/controllers/FornecedorController.php';
+        $c = new FornecedorController();
+        break;
 
-    
+    case 'cep':
+        require_once __DIR__ . '/controllers/CepController.php';
+        $c = new CepController();
+        break;
+
+    case 'variacao':
+        require_once __DIR__ . '/controllers/VariacaoController.php';
+        $c = new VariacaoController();
+        break;
+
+    // ==================== LOJA VIRTUAL (CLIENTE) ====================
+ 
+    case 'loja':
+        require_once __DIR__ . '/config/helpers.php';
+        require_once __DIR__ . '/controllers/LojaController.php';
+        $c = new LojaController();
+        break;
+
+    case 'carrinho':
+        require_once __DIR__ . '/config/helpers.php';
+        require_once __DIR__ . '/controllers/CarrinhoController.php';
+        $c = new CarrinhoController();
+        break;
+
+    case 'cliente':
+        require_once __DIR__ . '/config/helpers.php';
+        require_once __DIR__ . '/controllers/ClienteController.php';
+        $c = new ClienteController();
+        break;
+
+    case 'pedido':
+        require_once __DIR__ . '/config/helpers.php';
+        require_once __DIR__ . '/controllers/PedidoController.php';
+        $c = new PedidoController();
+        break;
+
+
     // Caminho padrão caso o controller não exista
     default:
         die("Controller inválido.");
 }
 
 
-// Executar ação
-if (!method_exists($c, $action)) {
+// Executar ação (só métodos públicos; protegidos/privados e __construct não são chamáveis pela URL)
+if (strpos($action, '__') === 0 || !is_callable([$c, $action])) {
     die("Ação inválida.");
 }
 
 
 $c->$action();
-
