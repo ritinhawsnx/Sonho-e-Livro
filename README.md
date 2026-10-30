@@ -1,4 +1,4 @@
-Entrelinhas Livraria
+Livros & Sonhos
 Sistema web desenvolvido em PHP, utilizando o padrão de arquitetura MVC (Model-View-Controller), para gerenciamento interno de uma livraria vitual. 
 
 Funcionalidades 
